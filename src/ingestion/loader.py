@@ -8,14 +8,11 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 pdf_path = BASE_DIR / "data" / "papers"
 
 
-def load_pdf() -> list[dict]:
+def load_pdf(pdf_path: Path) -> list[dict]:
     
-    
-    reader = PdfReader("D:/Study/researchpilot/data/papers/Impact-of-Ipv6-Adoption-on-Internet-Infrastructure.pdf")
+    reader = PdfReader(pdf_path)
 
     documents = []
-
-    print("Reader is " , reader)
 
     for page_number, page in enumerate(reader.pages, start=1):
         text = page.extract_text() or ""
@@ -32,10 +29,3 @@ def load_pdf() -> list[dict]:
             )
 
     return documents
-
-
-
-
-value =  load_pdf()
-
-print("VAlue is " , value)
