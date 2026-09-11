@@ -9,7 +9,13 @@ pdf_path = BASE_DIR / "data" / "papers"
 
 
 def load_pdf(pdf_path: Path) -> list[dict]:
-    
+    pdf_path = Path(pdf_path)
+    if pdf_path.is_dir():
+        documents = []
+        for file in sorted(pdf_path.glob("*.pdf")):
+            documents.extend(load_pdf(file))
+        return documents
+
     reader = PdfReader(pdf_path)
 
     documents = []
