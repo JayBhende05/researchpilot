@@ -13,7 +13,6 @@ def chunk_documents(documents: list[dict]) -> list[dict]:
 
         while start < len(text):
             end = start + CHUNK_SIZE
-
             chunk_text = text[start:end].strip()
 
             if chunk_text:
@@ -26,7 +25,6 @@ def chunk_documents(documents: list[dict]) -> list[dict]:
                         },
                     }
                 )
-
             chunk_index += 1
 
             next_start = end - CHUNK_OVERLAP

@@ -7,6 +7,8 @@ print("Base Directory " ,BASE_DIR)
 
 PAPERS_DIR = BASE_DIR / "data" / "papers"
 
+
+
 CHUNK_SIZE = 800
 CHUNK_OVERLAP = 120
 

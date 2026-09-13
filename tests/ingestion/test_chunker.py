@@ -1,4 +1,4 @@
-from src.ingestion.chunker import chunk_documents
+from researchpilot.ingestion.chunker import chunk_documents
 
 
 
@@ -19,4 +19,5 @@ def test_data_chunker():
   assert chunks[0]["metadata"]["source"] == "test.pdf"
   assert chunks[0]["metadata"]["page"] == 1
 
+  
   

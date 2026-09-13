@@ -2,14 +2,12 @@ from pathlib import Path
 
 from pypdf import PdfReader
 
-
-
-BASE_DIR = Path(__file__).resolve().parents[2]
-pdf_path = BASE_DIR / "data" / "papers"
+# from researchpilot.config.settings import PAPERS_DIR
 
 
 def load_pdf(pdf_path: Path) -> list[dict]:
     pdf_path = Path(pdf_path)
+
     if pdf_path.is_dir():
         documents = []
         for file in sorted(pdf_path.glob("*.pdf")):
@@ -17,9 +15,7 @@ def load_pdf(pdf_path: Path) -> list[dict]:
         return documents
 
     reader = PdfReader(pdf_path)
-
     documents = []
-
     for page_number, page in enumerate(reader.pages, start=1):
         text = page.extract_text() or ""
 
@@ -35,3 +31,7 @@ def load_pdf(pdf_path: Path) -> list[dict]:
             )
 
     return documents
+
+# value   = load_pdf(PAPERS_DIR)
+
+# print("The loaded value of the PDF is " , value)
