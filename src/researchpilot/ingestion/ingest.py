@@ -6,10 +6,11 @@ from researchpilot.retrieval.embedder import Embedder
 from researchpilot.retrieval.vector_store import VectorStore
 from researchpilot.config.settings import PAPERS_DIR
 
+query = "How does QLoRA reduce memory requirements?"
 
 def ingest_papers():
     embedder = Embedder()
-    vector_store = VectorStore()
+    vector_store = VectorStore(reset=True)
 
     pdf_files = list(PAPERS_DIR.glob("*.pdf"))
 

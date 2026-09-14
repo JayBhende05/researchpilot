@@ -3,11 +3,24 @@ import chromadb
 from researchpilot.config.settings import COLLECTION_NAME
 
 
+
 class VectorStore:
-    def __init__(self, persist_directory: str = "data/chroma"):
+    def __init__(
+        self,
+        persist_directory: str = "data/chroma",
+        reset: bool = False,
+    ):
         self.client = chromadb.PersistentClient(
             path=persist_directory
         )
+
+        if reset:
+            try:
+                self.client.delete_collection(
+                    name=COLLECTION_NAME
+                )
+            except Exception:
+                pass
 
         self.collection = self.client.get_or_create_collection(
             name=COLLECTION_NAME
