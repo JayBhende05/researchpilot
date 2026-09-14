@@ -1,50 +1,117 @@
 [
     {
         "question": "What is attention?",
-        "expected_source": "attentionisallyouneed.pdf"
+        "expected_source": "attentionisallyouneed.pdf",
+        "expected_page": [
+            3,
+            4
+        ]
     },
     {
         "question": "What is multi-head attention?",
-        "expected_source": "attentionisallyouneed.pdf"
+        "expected_source": "attentionisallyouneed.pdf",
+        "expected_page": [
+            3,
+            4,
+            5
+        ]
     },
     {
         "question": "Why does the Transformer use self-attention?",
-        "expected_source": "attentionisallyouneed.pdf"
+        "expected_source": "attentionisallyouneed.pdf",
+        "expected_page": [
+            4,
+            5,
+            6
+        ]
     },
     {
         "question": "What is DeepSeek-R1?",
-        "expected_source": "deepseek-r1.pdf"
+        "expected_source": "deepseek-r1.pdf",
+        "expected_page": [
+            1,
+            2,
+            3,
+            4
+        ]
     },
     {
         "question": "What role does reinforcement learning play in DeepSeek-R1?",
-        "expected_source": "deepseek-r1.pdf"
+        "expected_source": "deepseek-r1.pdf",
+        "expected_page": [
+            5,
+            6,
+            7,
+            8
+        ]
     },
     {
         "question": "What problem does DeepSeek-R1 aim to address?",
-        "expected_source": "deepseek-r1.pdf"
+        "expected_source": "deepseek-r1.pdf",
+        "expected_page": [
+            1,
+            2,
+            3,
+            4
+        ]
     },
     {
         "question": "Why is IPv6 adoption necessary?",
-        "expected_source": "Impact-of-Ipv6-Adoption-on-Internet-Infrastructure.pdf"
+        "expected_source": "Impact-of-Ipv6-Adoption-on-Internet-Infrastructure.pdf",
+        "expected_page": [
+            1,
+            2,
+            3,
+            4
+        ]
     },
     {
         "question": "What are the challenges of IPv6 adoption?",
-        "expected_source": "Impact-of-Ipv6-Adoption-on-Internet-Infrastructure.pdf"
+        "expected_source": "Impact-of-Ipv6-Adoption-on-Internet-Infrastructure.pdf",
+        "expected_page": [
+            6,
+            7,
+            8
+        ]
     },
     {
         "question": "What are the key features of IPv6?",
-        "expected_source": "Impact-of-Ipv6-Adoption-on-Internet-Infrastructure.pdf"
+        "expected_source": "Impact-of-Ipv6-Adoption-on-Internet-Infrastructure.pdf",
+        "expected_page": [
+            2,
+            3,
+            4,
+            5
+        ]
     },
     {
         "question": "What is few-shot learning?",
-        "expected_source": "LMarefewshotlearners.pdf"
+        "expected_source": "LMarefewshotlearners.pdf",
+        "expected_page": [
+            1,
+            2,
+            3,
+            4
+        ]
     },
     {
         "question": "How does GPT-3 demonstrate few-shot learning?",
-        "expected_source": "LMarefewshotlearners.pdf"
+        "expected_source": "LMarefewshotlearners.pdf",
+        "expected_page": [
+            1,
+            2,
+            3,
+            4
+        ]
     },
     {
         "question": "What is the main idea behind language models as few-shot learners?",
-        "expected_source": "LMarefewshotlearners.pdf"
+        "expected_source": "LMarefewshotlearners.pdf",
+        "expected_page": [
+            1,
+            2,
+            3,
+            4
+        ]
     }
 ]

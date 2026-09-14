@@ -19,9 +19,13 @@ def evaluate():
     embedder = Embedder()
     vector_store = VectorStore()
 
-    top_1_correct = 0
-    top_3_correct = 0
-    top_5_correct = 0
+    top_1_document = 0
+    top_3_document = 0
+    top_5_document = 0
+
+    top_1_evidence = 0
+    top_3_evidence = 0
+    top_5_evidence = 0
 
     print("\nResearchPilot Retrieval Evaluation")
     print("=" * 80)
@@ -29,6 +33,7 @@ def evaluate():
     for item in questions:
         question = item["question"]
         expected_source = item["expected_source"]
+        expected_page = item["expected_page"]
 
         query_embedding = embedder.embed_query(question)
 
@@ -37,43 +42,119 @@ def evaluate():
             top_k=5,
         )
 
+        documents = results["documents"][0]
+        metadatas = results["metadatas"][0]
+
         sources = [
             metadata["source"]
-            for metadata in results["metadatas"][0]
+            for metadata in metadatas
         ]
 
-        top_1 = expected_source in sources[:1]
-        top_3 = expected_source in sources[:3]
-        top_5 = expected_source in sources[:5]
+        pages = [
+            metadata["page"]
+            for metadata in metadatas
+        ]
 
-        if top_1:
-            top_1_correct += 1
+        # -------------------------
+        # Document-level evaluation
+        # -------------------------
 
-        if top_3:
-            top_3_correct += 1
+        if expected_source in sources[:1]:
+            top_1_document += 1
 
-        if top_5:
-            top_5_correct += 1
+        if expected_source in sources[:3]:
+            top_3_document += 1
+
+        if expected_source in sources[:5]:
+            top_5_document += 1
+
+        # -------------------------
+        # Evidence-level evaluation
+        # -------------------------
+
+        expected_pages = set(expected_page)
+
+        retrieved_evidence = [
+            (
+                metadata["source"],
+                metadata["page"],
+            )
+            for metadata in metadatas
+        ]
+
+
+        def evidence_matches(metadata):
+            return (
+                metadata["source"] == expected_source
+                and metadata["page"] in expected_pages
+            )
+
+
+        if any(
+            evidence_matches(metadata)
+            for metadata in metadatas[:1]
+        ):
+            top_1_evidence += 1
+
+        if any(
+            evidence_matches(metadata)
+            for metadata in metadatas[:3]
+        ):
+            top_3_evidence += 1
+
+        if any(
+            evidence_matches(metadata)
+            for metadata in metadatas[:5]
+        ):
+            top_5_evidence += 1
 
         print(f"\nQuestion: {question}")
-        print(f"Expected: {expected_source}")
-        print(f"Top 5:    {sources}")
-        print(
-            f"Top-1: {'✓' if top_1 else '✗'} | "
-            f"Top-3: {'✓' if top_3 else '✗'} | "
-            f"Top-5: {'✓' if top_5 else '✗'}"
-        )
+        print(f"Expected source: {expected_source}")
+        print(f"Expected page:   {expected_page}")
 
+        print("\nRetrieved:")
+
+        print("\nRetrieved:")
+
+        for rank, (document, metadata) in enumerate(
+            zip(documents, metadatas),
+            start=1,
+        ):
+            print(
+                f"{rank}. "
+                f"{metadata['source']} | "
+                f"page {metadata['page']} | "
+                f"chunk {metadata['chunk']}"
+            )
+
+            print(f"   {document[:250].replace(chr(10), ' ')}") 
     total = len(questions)
 
     print("\n" + "=" * 80)
     print("SUMMARY")
     print("=" * 80)
 
-    print(f"Queries:          {total}")
-    print(f"Top-1 Accuracy:   {top_1_correct / total:.2%}")
-    print(f"Top-3 Accuracy:   {top_3_correct / total:.2%}")
-    print(f"Top-5 Accuracy:   {top_5_correct / total:.2%}")
+    print("\nDocument Retrieval")
+    print(
+        f"Top-1: {top_1_document / total:.2%}"
+    )
+    print(
+        f"Top-3: {top_3_document / total:.2%}"
+    )
+    print(
+        f"Top-5: {top_5_document / total:.2%}"
+    )
+
+    print("\nEvidence Retrieval")
+    print(
+        f"Top-1: {top_1_evidence / total:.2%}"
+    )
+    print(
+        f"Top-3: {top_3_evidence / total:.2%}"
+    )
+    print(
+        f"Top-5: {top_5_evidence / total:.2%}"
+    )
 
 
 if __name__ == "__main__":
