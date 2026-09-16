@@ -1,0 +1,398 @@
+[
+    {
+        "question": "What is attention?",
+        "expected_source": "attentionisallyouneed.pdf",
+        "gold_evidence": [
+            {
+                "page": 3,
+                "section": "3.2 Attention",
+                "evidence_type": "definition",
+                "justification": "Page 3 opens Section 3.2 with the formal definition of an attention function as mapping a query and key-value pairs to an output."
+            }
+        ],
+        "expected_answer": "An attention function maps a query and a set of key-value pairs to an output, computed as a weighted sum of the values, where the weight for each value is determined by a compatibility function between the query and the corresponding key."
+    },
+    {
+        "question": "What is the formula for Scaled Dot-Product Attention?",
+        "expected_source": "attentionisallyouneed.pdf",
+        "gold_evidence": [
+            {
+                "page": 4,
+                "section": "3.2.1 Scaled Dot-Product Attention",
+                "evidence_type": "formula",
+                "justification": "Page 4 contains Equation (1), the exact formula for Scaled Dot-Product Attention, along with its derivation and rationale for the scaling factor."
+            }
+        ],
+        "expected_answer": "Attention(Q, K, V) = softmax(QK^T / sqrt(d_k)) V"
+    },
+    {
+        "question": "How many parallel attention heads (h) does the Transformer use, and what are dk and dv set to?",
+        "expected_source": "attentionisallyouneed.pdf",
+        "gold_evidence": [
+            {
+                "page": 4,
+                "section": "3.2.2 Multi-Head Attention",
+                "evidence_type": "hyperparameter",
+                "justification": "Page 4 states the specific values used in this work: h = 8 parallel attention heads, with dk = dv = dmodel/h = 64."
+            }
+        ],
+        "expected_answer": "h = 8 heads, with dk = dv = 64."
+    },
+    {
+        "question": "What is Multi-Head Attention and why is it used instead of a single attention function?",
+        "expected_source": "attentionisallyouneed.pdf",
+        "gold_evidence": [
+            {
+                "page": 4,
+                "section": "3.2.2 Multi-Head Attention",
+                "evidence_type": "definition",
+                "justification": "Page 4 defines Multi-Head Attention with its formula and explains that it lets the model jointly attend to information from different representation subspaces, which a single averaged attention head would inhibit."
+            }
+        ],
+        "expected_answer": "Multi-Head Attention linearly projects queries, keys, and values h times into different subspaces, performs attention in parallel on each, then concatenates and projects the results. It is used because a single attention head averages across positions, limiting the model's ability to attend to multiple types of information at once."
+    },
+    {
+        "question": "How many identical layers make up the encoder and decoder stacks, and what is dmodel?",
+        "expected_source": "attentionisallyouneed.pdf",
+        "gold_evidence": [
+            {
+                "page": 3,
+                "section": "3.1 Encoder and Decoder Stacks",
+                "evidence_type": "hyperparameter",
+                "justification": "Page 3 explicitly states N = 6 identical layers for both the encoder and decoder, and dmodel = 512."
+            }
+        ],
+        "expected_answer": "N = 6 layers for both encoder and decoder stacks; dmodel = 512."
+    },
+    {
+        "question": "What is the formula used for positional encoding?",
+        "expected_source": "attentionisallyouneed.pdf",
+        "gold_evidence": [
+            {
+                "page": 6,
+                "section": "3.5 Positional Encoding",
+                "evidence_type": "formula",
+                "justification": "Page 6 provides the sine and cosine equations for positional encoding and the reasoning for choosing sinusoidal encodings over learned ones."
+            }
+        ],
+        "expected_answer": "PE(pos, 2i) = sin(pos / 10000^(2i/dmodel)); PE(pos, 2i+1) = cos(pos / 10000^(2i/dmodel))."
+    },
+    {
+        "question": "What is the maximum path length and per-layer complexity of self-attention compared to recurrent layers?",
+        "expected_source": "attentionisallyouneed.pdf",
+        "gold_evidence": [
+            {
+                "page": 6,
+                "section": "Table 1",
+                "evidence_type": "table-lookup",
+                "justification": "Table 1 on page 6 is the sole structured comparison of per-layer complexity, sequential operations, and maximum path length across self-attention, recurrent, and convolutional layers."
+            }
+        ],
+        "expected_answer": "Self-attention: O(n^2 * d) complexity per layer, O(1) sequential operations, O(1) maximum path length. Recurrent: O(n * d^2) complexity, O(n) sequential operations, O(n) maximum path length."
+    },
+    {
+        "question": "What optimizer and learning rate schedule were used to train the model?",
+        "expected_source": "attentionisallyouneed.pdf",
+        "gold_evidence": [
+            {
+                "page": 8,
+                "section": "5.3 Optimizer",
+                "evidence_type": "hyperparameter",
+                "justification": "Page 8 names the Adam optimizer with specific beta and epsilon values and gives Equation (3) for the warmup/decay learning rate schedule."
+            }
+        ],
+        "expected_answer": "Adam optimizer with beta1=0.9, beta2=0.98, epsilon=1e-9. Learning rate increases linearly for warmup_steps=4000, then decreases proportionally to the inverse square root of the step number."
+    },
+    {
+        "question": "What BLEU scores did the Transformer (big) model achieve on WMT 2014 English-to-German and English-to-French?",
+        "expected_source": "attentionisallyouneed.pdf",
+        "gold_evidence": [
+            {
+                "page": 1,
+                "section": "Abstract",
+                "evidence_type": "claim",
+                "justification": "The abstract states the headline BLEU results as the paper's key contribution."
+            },
+            {
+                "page": 9,
+                "section": "Table 2",
+                "evidence_type": "table-lookup",
+                "justification": "Table 2 provides the authoritative tabulated BLEU scores and training costs used for direct comparison against prior state-of-the-art models."
+            }
+        ],
+        "expected_answer": "28.4 BLEU on English-to-German and 41.8 BLEU on English-to-French."
+    },
+    {
+        "question": "What two types of regularization were used during training, and what were their values?",
+        "expected_source": "attentionisallyouneed.pdf",
+        "gold_evidence": [
+            {
+                "page": 8,
+                "section": "5.4 Regularization",
+                "evidence_type": "hyperparameter",
+                "justification": "Page 8 lists both Residual Dropout (Pdrop=0.1) and Label Smoothing (epsilon_ls=0.1) with their specific values in a self-contained section."
+            }
+        ],
+        "expected_answer": "Residual Dropout with Pdrop = 0.1, and Label Smoothing with epsilon_ls = 0.1."
+    },
+    {
+        "question": "What reinforcement learning algorithm does DeepSeek-R1-Zero use, and where does it come from?",
+        "expected_source": "deepseek-r1.pdf",
+        "gold_evidence": [
+            {
+                "page": 2,
+                "section": "2.1 Group Relative Policy Optimization",
+                "evidence_type": "definition",
+                "justification": "Page 2 states that DeepSeek-R1-Zero and DeepSeek-R1 are trained with Group Relative Policy Optimization (GRPO), originally proposed to simplify PPO's training process and reduce resource consumption."
+            }
+        ],
+        "expected_answer": "GRPO (Group Relative Policy Optimization), adapted from Shao et al. (2024), designed to simplify PPO's training process and reduce its resource consumption."
+    },
+    {
+        "question": "What is the GRPO objective function formula, and how is the advantage A_i computed?",
+        "expected_source": "deepseek-r1.pdf",
+        "gold_evidence": [
+            {
+                "page": 3,
+                "section": "2.1 Group Relative Policy Optimization",
+                "evidence_type": "formula",
+                "justification": "Page 3 contains Equations (1)-(3): the GRPO clipped surrogate objective with KL penalty, the KL divergence estimator, and the group-normalized advantage formula."
+            }
+        ],
+        "expected_answer": "The GRPO objective clips the probability ratio between new and old policy per output, subtracts a KL penalty against a reference policy, and averages over a group of sampled outputs. The advantage A_i is computed by normalizing each output's reward r_i by subtracting the group mean and dividing by the group standard deviation."
+    },
+    {
+        "question": "What hyperparameters were used to train DeepSeek-R1-Zero (learning rate, KL coefficient, sampling temperature, group size)?",
+        "expected_source": "deepseek-r1.pdf",
+        "gold_evidence": [
+            {
+                "page": 3,
+                "section": "2.1 Group Relative Policy Optimization",
+                "evidence_type": "hyperparameter",
+                "justification": "Page 3 explicitly lists the training hyperparameters: learning rate 3e-6, KL coefficient 0.001, sampling temperature 1, and 16 sampled outputs per question, along with batch size and step details."
+            }
+        ],
+        "expected_answer": "Learning rate = 3e-6, KL coefficient = 0.001, sampling temperature = 1, 16 outputs sampled per question, max length 32,768 tokens (extended to 65,536 after step 8.2k), batch size 512, trained for 10,400 steps (1.6 epochs)."
+    },
+    {
+        "question": "What are the two types of rule-based rewards used to train DeepSeek-R1-Zero?",
+        "expected_source": "deepseek-r1.pdf",
+        "gold_evidence": [
+            {
+                "page": 3,
+                "section": "2.2 Reward Design",
+                "evidence_type": "definition",
+                "justification": "Page 3 (continuing to page 4) describes accuracy rewards (correctness of final answers via rule-based verification) and format rewards (enforcing the <think></think> tag structure)."
+            }
+        ],
+        "expected_answer": "Accuracy rewards, which evaluate whether the response's final answer is correct (e.g., via a boxed answer or compiler test cases), and format rewards, which enforce that the reasoning process is wrapped in <think> and </think> tags."
+    },
+    {
+        "question": "Why did the authors avoid using neural (model-based) reward models for DeepSeek-R1-Zero's reasoning tasks?",
+        "expected_source": "deepseek-r1.pdf",
+        "gold_evidence": [
+            {
+                "page": 4,
+                "section": "2.2 Reward Design",
+                "evidence_type": "claim",
+                "justification": "Page 4 explains that neural reward models were avoided because they are susceptible to reward hacking during large-scale RL, and retraining them requires substantial computational resources."
+            }
+        ],
+        "expected_answer": "Neural reward models are susceptible to reward hacking during large-scale reinforcement learning, and retraining such models requires substantial additional computational resources and complexity."
+    },
+    {
+        "question": "What was the 'aha moment' observed during DeepSeek-R1-Zero's training?",
+        "expected_source": "deepseek-r1.pdf",
+        "gold_evidence": [
+            {
+                "page": 5,
+                "section": "Table 2 / Section 2.3",
+                "evidence_type": "definition",
+                "justification": "Page 5 describes and gives a transcript example (Table 2) of the model spontaneously pausing mid-solution with anthropomorphic language ('Wait, wait. Wait. That's an aha moment I can flag here') to reconsider its approach, and links this to a sudden increase in the use of the word 'wait' during reflections."
+            }
+        ],
+        "expected_answer": "During training, DeepSeek-R1-Zero began to rethink its approach mid-solution using an anthropomorphic tone (e.g., saying 'Wait, wait. Wait. That's an aha moment'), marked by a sudden increase in the use of the word 'wait' during reflections — illustrating emergent self-verification behavior from RL alone."
+    },
+    {
+        "question": "What multi-stage pipeline does DeepSeek-R1 use, and what problem does it solve relative to DeepSeek-R1-Zero?",
+        "expected_source": "deepseek-r1.pdf",
+        "gold_evidence": [
+            {
+                "page": 6,
+                "section": "3. DeepSeek-R1 / Figure 2",
+                "evidence_type": "definition",
+                "justification": "Page 6 and Figure 2 describe the multi-stage pipeline (cold-start data, RL, rejection sampling + SFT, second RL stage) developed to fix DeepSeek-R1-Zero's poor readability and language-mixing issues."
+            }
+        ],
+        "expected_answer": "DeepSeek-R1 uses a four-stage pipeline: (1) cold-start SFT on human-aligned conversational reasoning data, (2) reasoning-oriented RL with language consistency reward, (3) rejection sampling plus SFT on both reasoning and non-reasoning data, and (4) a second RL stage for helpfulness and harmlessness. This addresses DeepSeek-R1-Zero's poor readability and English-Chinese language mixing."
+    },
+    {
+        "question": "How was the language consistency reward calculated, and why was it introduced?",
+        "expected_source": "deepseek-r1.pdf",
+        "gold_evidence": [
+            {
+                "page": 7,
+                "section": "3.2.1 Training Details of the First RL Stage",
+                "evidence_type": "formula",
+                "justification": "Page 7 gives Equation (7), defining the language consistency reward as the proportion of target-language words in the chain-of-thought, introduced to mitigate language mixing during RL training."
+            }
+        ],
+        "expected_answer": "Reward_language = Num(Words_target) / Num(Words), i.e., the proportion of target-language words in the CoT. It was introduced to mitigate language mixing that occurs during RL training."
+    },
+    {
+        "question": "What benchmark improvements did the final DeepSeek-R1 model show over DeepSeek-R1 Dev3, and in which areas?",
+        "expected_source": "deepseek-r1.pdf",
+        "gold_evidence": [
+            {
+                "page": 9,
+                "section": "Table 3 / Section 4",
+                "evidence_type": "table-lookup",
+                "justification": "Table 3 on page 9 gives per-stage benchmark scores, and the accompanying text states that the final RL stage produced only marginal gains in code/math but large gains in general instruction-following, with AlpacaEval 2.0 improving by 25% and ArenaHard by 17%."
+            }
+        ],
+        "expected_answer": "Marginal improvements in code and math benchmarks (since most reasoning-specific gains occurred in earlier stages), but large improvements in general instruction-following and preference benchmarks: AlpacaEval 2.0 improved by 25% and ArenaHard by 17%."
+    },
+    {
+        "question": "What capability limitations does DeepSeek-R1 have, according to the authors?",
+        "expected_source": "deepseek-r1.pdf",
+        "gold_evidence": [
+            {
+                "page": 10,
+                "section": "6. Conclusion, Limitation, and Future Work",
+                "evidence_type": "claim",
+                "justification": "Page 10 (continuing to page 11) explicitly lists the model's limitations: suboptimal structured output and no tool use, token efficiency/overthinking on simple tasks, English-Chinese language mixing on other-language queries, sensitivity to few-shot prompting, and limited gains on software engineering tasks."
+            }
+        ],
+        "expected_answer": "DeepSeek-R1's stated limitations include: suboptimal structured output and lack of tool use (e.g., search engines, calculators); token inefficiency/overthinking on simple tasks; language mixing when queried in languages other than English or Chinese; degraded performance under few-shot prompting; and limited improvement over DeepSeek-V3 on software engineering benchmarks due to constrained RL evaluation efficiency."
+    },
+    {
+        "question": "What is the address space size of IPv6 compared to IPv4?",
+        "expected_source": "Impact-of-Ipv6-Adoption-on-Internet-Infrastructure.pdf",
+        "gold_evidence": [
+            {
+                "page": 2,
+                "section": "2. Technical Background — 2. IPv6 Overview",
+                "evidence_type": "definition",
+                "justification": "Page 2 states IPv6 uses a 128-bit address format offering 3.4 x 10^38 possible addresses, contrasted with IPv4's 32-bit, ~4.3 billion address space described earlier on the same page."
+            }
+        ],
+        "expected_answer": "IPv4 uses 32-bit addressing (~4.3 billion addresses), while IPv6 uses 128-bit addressing (~3.4 x 10^38 addresses, i.e., 340 undecillion)."
+    },
+    {
+        "question": "What are the three primary IPv6 transition mechanisms, and what does each do?",
+        "expected_source": "Impact-of-Ipv6-Adoption-on-Internet-Infrastructure.pdf",
+        "gold_evidence": [
+            {
+                "page": 3,
+                "section": "Transition Mechanism",
+                "evidence_type": "definition",
+                "justification": "Page 3 defines the three primary transition mechanisms — Dual Stack, Tunneling, and Translation — describing how each enables IPv4/IPv6 coexistence."
+            }
+        ],
+        "expected_answer": "Dual Stack (devices run both IPv4 and IPv6 stacks simultaneously), Tunneling (IPv6 packets are encapsulated within IPv4 packets to cross IPv4-only networks, e.g., 6to4, Teredo, ISATAP), and Translation (an intermediary gateway converts headers/payloads between IPv4 and IPv6, e.g., NAT64/DNS64, SIIT)."
+    },
+    {
+        "question": "How does Google use dual stack, and what share of its traffic is over IPv6?",
+        "expected_source": "Impact-of-Ipv6-Adoption-on-Internet-Infrastructure.pdf",
+        "gold_evidence": [
+            {
+                "page": 3,
+                "section": "Table 2: Real world deployments of IPv6 transition mechanisms",
+                "evidence_type": "table-lookup",
+                "justification": "Table 2 on page 3 states Google operates all major services in dual stack mode, with over 50% of its traffic now over IPv6."
+            }
+        ],
+        "expected_answer": "Google operates all major services (e.g., Search, YouTube) in dual stack mode, allowing both IPv4 and IPv6 clients to connect natively; over 50% of Google's traffic is now over IPv6."
+    },
+    {
+        "question": "How does IPv6's larger address space affect router hardware performance?",
+        "expected_source": "Impact-of-Ipv6-Adoption-on-Internet-Infrastructure.pdf",
+        "gold_evidence": [
+            {
+                "page": 4,
+                "section": "Impact on Internet Infrastructure — 1.1 Routing and Forwarding",
+                "evidence_type": "claim",
+                "justification": "Page 4 explains that although IPv6 can reduce visible routing prefixes through aggregation, routers must still manage and search 128-bit address entries instead of 32-bit ones, putting extra pressure on lookup and memory performance, sometimes requiring firmware/hardware upgrades or larger TCAMs."
+            }
+        ],
+        "expected_answer": "IPv6's 128-bit addresses (vs. 32-bit in IPv4) require routers to manage and search much larger address entries, straining lookup and memory performance. This often requires firmware updates, hardware upgrades, or more advanced lookup systems such as larger TCAMs."
+    },
+    {
+        "question": "What percentage of users in the Asia Pacific region are IPv6 capable, and how does this compare to other regions?",
+        "expected_source": "Impact-of-Ipv6-Adoption-on-Internet-Infrastructure.pdf",
+        "gold_evidence": [
+            {
+                "page": 5,
+                "section": "Table 3: IPv6 Deployment on basis of region",
+                "evidence_type": "table-lookup",
+                "justification": "Table 3 on page 5 gives regional IPv6 capability figures: ~50% for Asia Pacific (APNIC), 50-52% for North America (ARIN), 40-70% mixed for Western Europe (RIPE), 20-40% for Latin America (LACNIC), and under 10% for Africa (AFRINIC)."
+            }
+        ],
+        "expected_answer": "Asia Pacific (APNIC) has ~50% regional IPv6 capability, with some countries like India and Vietnam exceeding 60-75%. This is comparable to North America (50-52%) and higher than Latin America (20-40%) and Africa (generally under 10%)."
+    },
+    {
+        "question": "Why does IPv6 make logging and user attribution more challenging for network operators?",
+        "expected_source": "Impact-of-Ipv6-Adoption-on-Internet-Infrastructure.pdf",
+        "gold_evidence": [
+            {
+                "page": 6,
+                "section": "4. Security Architectures — 4.3 Addressing, Logging, and Attribution Challenges",
+                "evidence_type": "claim",
+                "justification": "Page 6 explains that unlike IPv4 (where NAT and limited pools create a tight user-to-IP mapping), IPv6 networks assign large delegated prefixes (e.g., /56 or /48) to customers, requiring heavier reliance on DHCPv6 logs, prefix delegation systems, and neighbour discovery caches."
+            }
+        ],
+        "expected_answer": "IPv6's vast address space means operators assign large delegated prefixes (e.g., /56 or /48) to customers rather than the tight NAT-based user-to-IP mapping used in IPv4, requiring operators to rely more heavily on DHCPv6 logs, prefix delegation systems, and neighbour discovery caches for logging and attribution."
+    },
+    {
+        "question": "What financial and operational cost increase do ISPs face from running dual stack networks?",
+        "expected_source": "Impact-of-Ipv6-Adoption-on-Internet-Infrastructure.pdf",
+        "gold_evidence": [
+            {
+                "page": 7,
+                "section": "Deployment Challenges — 1. Financial and Economic Barriers",
+                "evidence_type": "claim",
+                "justification": "Page 7 states that running IPv4 and IPv6 simultaneously increases operational expenses by 20 to 30 percent according to feedback from operators in APNIC forums."
+            }
+        ],
+        "expected_answer": "Running dual stack (IPv4 and IPv6 simultaneously) increases operational expenses by 20 to 30 percent, according to operator feedback reported in APNIC forums."
+    },
+    {
+        "question": "What IPv6 adoption rates did Vietnam achieve by 2025, and what drove this success?",
+        "expected_source": "Impact-of-Ipv6-Adoption-on-Internet-Infrastructure.pdf",
+        "gold_evidence": [
+            {
+                "page": 8,
+                "section": "Case Studies — 1. Vietnam (VNPT and Viettel)",
+                "evidence_type": "claim",
+                "justification": "Page 8 states Vietnam achieved approximately 89% IPv6 adoption in mobile networks and 75% in fixed broadband (FTTH) by 2025, driven by VNPT and Viettel's infrastructure upgrades and government-led IPv6 action plans and regulatory mandates."
+            }
+        ],
+        "expected_answer": "Vietnam achieved approximately 89% IPv6 adoption in mobile networks and 75% in fixed broadband (FTTH) by 2025, driven by major ISPs VNPT and Viettel, along with government-led IPv6 action plans and regulatory mandates."
+    },
+    {
+        "question": "How did Reliance Jio's approach to IPv6 differ from the typical ISP strategy, and what was the impact on India's adoption rate?",
+        "expected_source": "Impact-of-Ipv6-Adoption-on-Internet-Infrastructure.pdf",
+        "gold_evidence": [
+            {
+                "page": 9,
+                "section": "Case Studies — 2. India (Reliance Jio)",
+                "evidence_type": "claim",
+                "justification": "Page 9 explains Jio took a bold IPv6-first approach (enabling IPv6 by default across devices, networks, and backend systems) rather than the cautious dual stack model used by many ISPs, helping India reach around 78% IPv6 capability by 2025."
+            }
+        ],
+        "expected_answer": "Reliance Jio adopted an IPv6-first approach, enabling IPv6 by default across devices, networks, and backend systems, rather than following the cautious dual stack model most ISPs use. This helped India reach approximately 78% IPv6 capability by 2025 and pushed other Indian telecoms to accelerate their own rollouts."
+    },
+    {
+        "question": "What key recommendations does the paper give for Internet Service Providers (ISPs) to accelerate IPv6 adoption?",
+        "expected_source": "Impact-of-Ipv6-Adoption-on-Internet-Infrastructure.pdf",
+        "gold_evidence": [
+            {
+                "page": 11,
+                "section": "Future Trends and Recommendations — 2.1 For Internet Service Providers (ISPs)",
+                "evidence_type": "claim",
+                "justification": "Page 11 lists four specific recommendations for ISPs: developing phased rollout plans, promoting IPv6-only deployments at the customer edge, shifting to IPv6-preferred routing, and collaborating with hyperscalers and CDNs."
+            }
+        ],
+        "expected_answer": "Develop clear, phased IPv6 rollout plans starting with backbone and metro networks; promote IPv6-only deployments at the customer edge with modern IPv6-capable CPE; shift toward IPv6-preferred routing while gradually reducing dual stack dependencies; and collaborate with hyperscalers and CDNs for optimized end-to-end IPv6 connectivity."
+    }
+]
