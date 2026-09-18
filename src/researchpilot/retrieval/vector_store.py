@@ -68,3 +68,35 @@ class VectorStore:
             query_embeddings=[query_embedding],
             n_results=top_k,
         )
+
+    def search_ranked(
+        self,
+        query_embedding,
+        top_k=5,
+    ):
+        """
+        Search the vector store and return normalized
+        ranked results suitable for multi-query fusion.
+        """
+
+        results = self.collection.query(
+            query_embeddings=[query_embedding],
+            n_results=top_k,
+        )
+
+        documents = results["documents"][0]
+        metadatas = results["metadatas"][0]
+        ids = results["ids"][0]
+
+        return [
+            {
+                "id": chunk_id,
+                "document": document,
+                "metadata": metadata,       
+            }
+            for chunk_id, document, metadata in zip(
+                ids,
+                documents,
+                metadatas,
+            )
+    ]
