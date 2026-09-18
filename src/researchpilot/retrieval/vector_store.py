@@ -26,6 +26,37 @@ class VectorStore:
             name=COLLECTION_NAME
         )
 
+    def get_all_chunks(self):
+        """
+        Return all indexed chunks in a normalized format
+        suitable for lexical retrieval such as BM25.
+        """
+
+        results = self.collection.get(
+            include=[
+                "documents",
+                "metadatas",
+            ]
+        )
+
+        documents = results["documents"]
+        metadatas = results["metadatas"]
+        ids = results["ids"]
+
+        return [
+        {
+            "id": chunk_id,
+            "document": document,
+            "metadata": metadata,
+        }
+        for chunk_id, document, metadata in zip(
+            ids,
+            documents,
+            metadatas,
+        )
+        ]
+
+
     def add_chunks(
         self,
         chunks: list[dict],
