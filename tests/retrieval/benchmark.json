@@ -394,5 +394,135 @@
             }
         ],
         "expected_answer": "Develop clear, phased IPv6 rollout plans starting with backbone and metro networks; promote IPv6-only deployments at the customer edge with modern IPv6-capable CPE; shift toward IPv6-preferred routing while gradually reducing dual stack dependencies; and collaborate with hyperscalers and CDNs for optimized end-to-end IPv6 connectivity."
+    },
+    {
+        "question": "How many parameters does GPT-3 have, and how does that compare to prior non-sparse language models?",
+        "expected_source": "LMarefewshotlearners.pdf",
+        "gold_evidence": [
+            {
+                "page": 1,
+                "section": "Abstract",
+                "evidence_type": "claim",
+                "justification": "The abstract states GPT-3 is an autoregressive language model with 175 billion parameters, 10x more than any previous non-sparse language model."
+            }
+        ],
+        "expected_answer": "GPT-3 has 175 billion parameters, which is 10x more than any previous non-sparse language model."
+    },
+    {
+        "question": "What is 'in-context learning' and how does it relate to meta-learning in this paper?",
+        "expected_source": "LMarefewshotlearners.pdf",
+        "gold_evidence": [
+            {
+                "page": 4,
+                "section": "1. Introduction",
+                "evidence_type": "definition",
+                "justification": "Page 4 defines in-context learning as the inner loop of meta-learning: the model is conditioned on a natural language instruction and/or a few demonstrations and predicts what comes next, without any gradient updates."
+            }
+        ],
+        "expected_answer": "In-context learning is using the text input of a pretrained language model as task specification — the model is conditioned on a natural language instruction and/or a few demonstrations of a task and completes further instances by predicting what comes next, with no gradient updates. It is described as the 'inner loop' of the broader meta-learning process, where the model develops general skills during pre-training (the 'outer loop') and rapidly applies them at inference time."
+    },
+    {
+        "question": "What are the four points on the fine-tuning-to-zero-shot spectrum defined in the Approach section, and how do they differ?",
+        "expected_source": "LMarefewshotlearners.pdf",
+        "gold_evidence": [
+            {
+                "page": 6,
+                "section": "2. Approach",
+                "evidence_type": "definition",
+                "justification": "Page 6 (continuing to page 7) explicitly defines Fine-Tuning (FT), Few-Shot (FS), One-Shot (1S), and Zero-Shot (0S), describing how each differs in the number of task-specific examples given at inference/training time."
+            }
+        ],
+        "expected_answer": "Fine-Tuning (FT) updates model weights using thousands to hundreds of thousands of labeled examples. Few-Shot (FS) gives the model K demonstrations (typically 10-100) at inference time with no weight updates. One-Shot (1S) allows only one demonstration plus a natural language task description. Zero-Shot (0S) allows no demonstrations at all, only a natural language instruction."
+    },
+    {
+        "question": "What is the maximum context window size (n_ctx) used for GPT-3, and how does this constrain few-shot learning?",
+        "expected_source": "LMarefewshotlearners.pdf",
+        "gold_evidence": [
+            {
+                "page": 6,
+                "section": "2. Approach — Few-Shot (FS)",
+                "evidence_type": "hyperparameter",
+                "justification": "Page 6 states K is typically set in the range of 10 to 100 because that is how many examples can fit in the model's context window, given as n_ctx = 2048."
+            }
+        ],
+        "expected_answer": "The context window is n_ctx = 2048 tokens. This constrains few-shot learning because K (the number of demonstrations) is typically set between 10 and 100, limited by how many examples can fit within that context window."
+    },
+    {
+        "question": "What are the architectural specifications (parameters, layers, dmodel, heads) of the full GPT-3 175B model and the smallest GPT-3 model?",
+        "expected_source": "LMarefewshotlearners.pdf",
+        "gold_evidence": [
+            {
+                "page": 8,
+                "section": "Table 2.1",
+                "evidence_type": "table-lookup",
+                "justification": "Table 2.1 on page 8 lists the size, layer count, dmodel, number of heads, head dimension, batch size, and learning rate for all 8 trained model sizes, including GPT-3 Small (125M) and GPT-3 175B."
+            }
+        ],
+        "expected_answer": "GPT-3 175B: 175.0B parameters, 96 layers, dmodel=12288, 96 attention heads, dhead=128, batch size 3.2M, learning rate 0.6e-4. GPT-3 Small: 125M parameters, 12 layers, dmodel=768, 12 heads, dhead=64, batch size 0.5M, learning rate 6.0e-4."
+    },
+    {
+        "question": "What datasets were used to train GPT-3, and how was Common Crawl filtered for quality?",
+        "expected_source": "LMarefewshotlearners.pdf",
+        "gold_evidence": [
+            {
+                "page": 8,
+                "section": "2.2 Training Dataset",
+                "evidence_type": "definition",
+                "justification": "Page 8 describes the three steps taken to improve Common Crawl quality (similarity-based filtering, fuzzy deduplication, adding curated high-quality corpora) and lists the additional datasets used: an expanded WebText, Books1, Books2, and English Wikipedia."
+            }
+        ],
+        "expected_answer": "GPT-3 was trained on a filtered version of Common Crawl (covering 2016-2019, ~570GB after filtering, ~400 billion tokens) combined with an expanded WebText dataset, two internet-based book corpora (Books1 and Books2), and English-language Wikipedia. Common Crawl was filtered via similarity to high-quality reference corpora and fuzzy deduplication at the document level."
+    },
+    {
+        "question": "What zero-shot, one-shot, and few-shot F1 scores did GPT-3 achieve on CoQA?",
+        "expected_source": "LMarefewshotlearners.pdf",
+        "gold_evidence": [
+            {
+                "page": 5,
+                "section": "1. Introduction",
+                "evidence_type": "numeric",
+                "justification": "Page 5 explicitly states GPT-3's CoQA scores: 81.5 F1 zero-shot, 84.0 F1 one-shot, and 85.0 F1 few-shot."
+            }
+        ],
+        "expected_answer": "GPT-3 achieves 81.5 F1 on CoQA in the zero-shot setting, 84.0 F1 in the one-shot setting, and 85.0 F1 in the few-shot setting."
+    },
+    {
+        "question": "How does GPT-3 handle the problem of test-set data contamination from Common Crawl?",
+        "expected_source": "LMarefewshotlearners.pdf",
+        "gold_evidence": [
+            {
+                "page": 6,
+                "section": "1. Introduction",
+                "evidence_type": "claim",
+                "justification": "Page 6 states the authors developed systematic tools to measure data contamination and quantify its distorting effects, finding minimal effect on most datasets but excluding or asterisking results on datasets where contamination could be inflating scores."
+            }
+        ],
+        "expected_answer": "The authors developed systematic tools to measure and quantify data contamination from Common Crawl. They found contamination had a minimal effect on most datasets, but for a few datasets where it could be inflating results, they either withheld results entirely or flagged them with an asterisk, depending on severity."
+    },
+    {
+        "question": "What structural/algorithmic limitation does GPT-3 have regarding bidirectional architectures, and what tasks does this affect?",
+        "expected_source": "LMarefewshotlearners.pdf",
+        "gold_evidence": [
+            {
+                "page": 33,
+                "section": "5. Limitations",
+                "evidence_type": "claim",
+                "justification": "Page 33 explains that GPT-3's experiments focus only on autoregressive architectures, excluding bidirectional or denoising objectives, which may explain lagging performance on tasks like WIC, ANLI, and reading comprehension tasks (QuAC, RACE) that benefit from bidirectionality."
+            }
+        ],
+        "expected_answer": "GPT-3 is a purely autoregressive model and does not include bidirectional architectures or denoising training objectives. This may explain its comparatively weaker performance on tasks that benefit from bidirectionality, such as WIC (comparing word usage across two sentences), ANLI (natural language inference), and reading comprehension tasks like QuAC and RACE."
+    },
+    {
+        "question": "What informal weakness did the authors observe in GPT-3 related to common sense physics?",
+        "expected_source": "LMarefewshotlearners.pdf",
+        "gold_evidence": [
+            {
+                "page": 33,
+                "section": "5. Limitations",
+                "evidence_type": "claim",
+                "justification": "Page 33 states GPT-3 has special difficulty with 'common sense physics' questions, giving the specific example 'If I put cheese into the fridge, will it melt?', despite performing well on some related benchmarks like PIQA."
+            }
+        ],
+        "expected_answer": "GPT-3 has special difficulty with common sense physics questions, such as 'If I put cheese into the fridge, will it melt?', despite doing well on some benchmarks that test this domain, such as PIQA."
     }
 ]
