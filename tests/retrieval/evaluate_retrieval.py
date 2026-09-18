@@ -4,6 +4,7 @@ from pathlib import Path
 
 from researchpilot.retrieval.embedder import Embedder
 from researchpilot.retrieval.vector_store import VectorStore
+from researchpilot.retrieval.query_transformer import transform_query
 
 
 QUESTIONS_FILE = Path("tests/retrieval/benchmark.json")
@@ -97,13 +98,20 @@ def evaluate():
             for evidence in gold_evidence
         }
 
-        query_embedding = embedder.embed_query(question)
+        transformed_query = transform_query(question)
+
+        query_embedding = embedder.embed_query(
+            transformed_query
+        )
 
         results = vector_store.search(
             query_embedding=query_embedding,
             top_k=5,
         )
 
+        print(f"Original query: {question}")
+        print(f"Transformed query: {transformed_query}")
+        
         documents = results["documents"][0]
         metadatas = results["metadatas"][0]
 
