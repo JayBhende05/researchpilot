@@ -5,7 +5,10 @@ from researchpilot.retrieval.embedder import Embedder
 from researchpilot.retrieval.vector_store import VectorStore
 from researchpilot.retrieval.bm25 import BM25Retriever
 from researchpilot.retrieval.reranker import Reranker
-from researchpilot.retrieval.reranked import RerankedRetriever
+from researchpilot.retrieval.query_expansion import expand_query
+from researchpilot.retrieval.expanded_reranked import (
+    ExpandedRerankedRetriever,
+)
 
 
 QUESTIONS_FILE = Path(
@@ -57,10 +60,6 @@ def evaluate():
 
     questions = load_questions()
 
-    # ------------------------------------------------------
-    # Initialize components
-    # ------------------------------------------------------
-
     embedder = Embedder()
 
     vector_store = VectorStore()
@@ -80,7 +79,7 @@ def evaluate():
 
     reranker = Reranker()
 
-    reranked_retriever = RerankedRetriever(
+    retriever = ExpandedRerankedRetriever(
         vector_store=vector_store,
         embedder=embedder,
         bm25_retriever=bm25_retriever,
@@ -107,14 +106,15 @@ def evaluate():
         5: 0,
         "not_retrieved": 0,
     }
-    
 
     # ------------------------------------------------------
     # Evaluation
     # ------------------------------------------------------
 
     print("\n" + "=" * 50)
-    print("ResearchPilot — E5 Reranked Retrieval")
+    print(
+        "ResearchPilot — E7 Query Expansion + Reranking"
+    )
     print("=" * 50)
 
     for item in questions:
@@ -130,8 +130,13 @@ def evaluate():
             for evidence in item["gold_evidence"]
         }
 
-        results = reranked_retriever.search(
-            query=question,
+        expanded_query = expand_query(
+            question
+        )
+
+        results = retriever.search(
+            original_query=question,
+            expanded_query=expanded_query,
             top_k=5,
             candidate_k=20,
         )
@@ -198,43 +203,10 @@ def evaluate():
         )
 
         if evidence_rank is None:
-            print("\n" + "-" * 60)
-            print("FAILED EVIDENCE RETRIEVAL")
-            print(f"Question: {question}")
-            print(f"Expected source: {expected_source}")
-            print(f"Gold pages: {sorted(gold_pages)}")
-
-            print("\nRetrieved:")
-    
-            for rank, result in enumerate(
-                results,
-                start=1,
-            ):
-                metadata = result["metadata"]
-
-                print(
-                    f"\n#{rank}"
-                )
-
-                print(
-                    f"Source: {metadata['source']}"
-                )
-
-                print(
-                    f"Page: {metadata['page']}"
-                )
-
-                print(
-                    f"Reranker score: "
-                    f"{result.get('reranker_score')}"
-                )
-
-                print(
-                    f"Text: "
-                    f"{result['document'][:300]}..."
-                )
-        elif evidence_rank <= 5:
-
+            evidence_rank_counts[
+                "not_retrieved"
+            ] += 1
+        else:
             evidence_rank_counts[
                 evidence_rank
             ] += 1
@@ -313,6 +285,20 @@ def evaluate():
         f"Gold evidence NOT in Top-5: "
         f"{count}/{total} "
         f"({count / total:.2%})"
+    )
+
+    # ------------------------------------------------------
+    # Sanity check
+    # ------------------------------------------------------
+
+    rank_total = sum(
+        evidence_rank_counts[rank]
+        for rank in range(1, 6)
+    ) + evidence_rank_counts["not_retrieved"]
+
+    print(
+        f"\nRank accounting check: "
+        f"{rank_total}/{total}"
     )
 
 
