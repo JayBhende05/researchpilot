@@ -20,17 +20,19 @@ class RerankedRetriever:
     """
 
     def __init__(
-        self,
-        vector_store,
-        embedder,
-        bm25_retriever,
-        reranker,
-        rrf_k: int = 60,
+    self,
+    vector_store,
+    embedder,
+    bm25_retriever,
+    reranker,
+    context_selector,
+    rrf_k: int = 60,
     ):
         self.vector_store = vector_store
         self.embedder = embedder
         self.bm25_retriever = bm25_retriever
         self.reranker = reranker
+        self.context_selector = context_selector
         self.rrf_k = rrf_k
 
     def search(
@@ -114,8 +116,13 @@ class RerankedRetriever:
         # Cross-encoder reranking
         # --------------------------------------------------
 
-        return self.reranker.rerank(
+        reranked_results = self.reranker.rerank(
             query=query,
             candidates=candidates,
+            top_k=top_k,
+        )
+
+        return self.context_selector.select(
+            candidates=reranked_results,
             top_k=top_k,
         )

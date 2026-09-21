@@ -6,6 +6,9 @@ from researchpilot.retrieval.vector_store import VectorStore
 from researchpilot.retrieval.bm25 import BM25Retriever
 from researchpilot.retrieval.reranker import Reranker
 from researchpilot.retrieval.reranked import RerankedRetriever
+from researchpilot.retrieval.context_selector import (
+    ContextSelector,
+)
 
 
 QUESTIONS_FILE = Path(
@@ -80,11 +83,17 @@ def evaluate():
 
     reranker = Reranker()
 
+    context_selector = ContextSelector(
+    embedder=embedder,
+    similarity_threshold=0.85,
+)
+
     reranked_retriever = RerankedRetriever(
-        vector_store=vector_store,
-        embedder=embedder,
-        bm25_retriever=bm25_retriever,
-        reranker=reranker,
+    vector_store=vector_store,
+    embedder=embedder,
+    bm25_retriever=bm25_retriever,
+    reranker=reranker,
+    context_selector=context_selector,
     )
 
     # ------------------------------------------------------
@@ -114,7 +123,7 @@ def evaluate():
     # ------------------------------------------------------
 
     print("\n" + "=" * 50)
-    print("ResearchPilot — E5 Reranked Retrieval")
+    print("ResearchPilot — E8 Context Selection")
     print("=" * 50)
 
     for item in questions:
