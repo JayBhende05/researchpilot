@@ -6,9 +6,6 @@ from researchpilot.retrieval.vector_store import VectorStore
 from researchpilot.retrieval.bm25 import BM25Retriever
 from researchpilot.retrieval.reranker import Reranker
 from researchpilot.retrieval.reranked import RerankedRetriever
-from researchpilot.retrieval.context_selector import (
-    ContextSelector,
-)
 
 
 QUESTIONS_FILE = Path(
@@ -68,6 +65,7 @@ def evaluate():
 
     vector_store = VectorStore()
 
+    # Build BM25 index from Chroma corpus
     chunks = vector_store.get_all_chunks()
 
     print(
@@ -83,17 +81,27 @@ def evaluate():
 
     reranker = Reranker()
 
-    context_selector = ContextSelector(
-    embedder=embedder,
-    similarity_threshold=0.85,
-)
+    # ------------------------------------------------------
+    # Final v0.2 retrieval pipeline
+    #
+    # Vector Search
+    #       +
+    # BM25
+    #       ↓
+    # RRF
+    #       ↓
+    # Candidate Pool = 20
+    #       ↓
+    # Cross-Encoder Reranker
+    #       ↓
+    # Top-5
+    # ------------------------------------------------------
 
-    reranked_retriever = RerankedRetriever(
-    vector_store=vector_store,
-    embedder=embedder,
-    bm25_retriever=bm25_retriever,
-    reranker=reranker,
-    context_selector=context_selector,
+    retriever = RerankedRetriever(
+        vector_store=vector_store,
+        embedder=embedder,
+        bm25_retriever=bm25_retriever,
+        reranker=reranker,
     )
 
     # ------------------------------------------------------
@@ -116,14 +124,15 @@ def evaluate():
         5: 0,
         "not_retrieved": 0,
     }
-    
 
     # ------------------------------------------------------
     # Evaluation
     # ------------------------------------------------------
 
     print("\n" + "=" * 50)
-    print("ResearchPilot — E8 Context Selection")
+    print(
+        "ResearchPilot — v0.2 Final Retrieval"
+    )
     print("=" * 50)
 
     for item in questions:
@@ -139,7 +148,7 @@ def evaluate():
             for evidence in item["gold_evidence"]
         }
 
-        results = reranked_retriever.search(
+        results = retriever.search(
             query=question,
             top_k=5,
             candidate_k=20,
@@ -156,7 +165,7 @@ def evaluate():
         ]
 
         # --------------------------------------------------
-        # Document evaluation
+        # Document Retrieval
         # --------------------------------------------------
 
         if expected_source in sources[:1]:
@@ -169,7 +178,7 @@ def evaluate():
             top_5_document += 1
 
         # --------------------------------------------------
-        # Evidence evaluation
+        # Evidence Retrieval
         # --------------------------------------------------
 
         if evidence_retrieved(
@@ -197,7 +206,7 @@ def evaluate():
             top_5_evidence += 1
 
         # --------------------------------------------------
-        # Evidence rank
+        # Evidence Rank
         # --------------------------------------------------
 
         evidence_rank = get_evidence_rank(
@@ -207,42 +216,12 @@ def evaluate():
         )
 
         if evidence_rank is None:
-            print("\n" + "-" * 60)
-            print("FAILED EVIDENCE RETRIEVAL")
-            print(f"Question: {question}")
-            print(f"Expected source: {expected_source}")
-            print(f"Gold pages: {sorted(gold_pages)}")
 
-            print("\nRetrieved:")
-    
-            for rank, result in enumerate(
-                results,
-                start=1,
-            ):
-                metadata = result["metadata"]
+            evidence_rank_counts[
+                "not_retrieved"
+            ] += 1
 
-                print(
-                    f"\n#{rank}"
-                )
-
-                print(
-                    f"Source: {metadata['source']}"
-                )
-
-                print(
-                    f"Page: {metadata['page']}"
-                )
-
-                print(
-                    f"Reranker score: "
-                    f"{result.get('reranker_score')}"
-                )
-
-                print(
-                    f"Text: "
-                    f"{result['document'][:300]}..."
-                )
-        elif evidence_rank <= 5:
+        else:
 
             evidence_rank_counts[
                 evidence_rank
@@ -262,6 +241,10 @@ def evaluate():
         f"\nQuestions evaluated: {total}"
     )
 
+    # ------------------------------------------------------
+    # Document Retrieval
+    # ------------------------------------------------------
+
     print("\nDocument Retrieval")
 
     print(
@@ -278,6 +261,10 @@ def evaluate():
         f"Top-5: "
         f"{top_5_document / total:.2%}"
     )
+
+    # ------------------------------------------------------
+    # Evidence Retrieval
+    # ------------------------------------------------------
 
     print("\nEvidence Retrieval")
 
@@ -297,7 +284,7 @@ def evaluate():
     )
 
     # ------------------------------------------------------
-    # Rank distribution
+    # Evidence Rank Distribution
     # ------------------------------------------------------
 
     print("\n" + "=" * 50)
@@ -314,14 +301,31 @@ def evaluate():
             f"({count / total:.2%})"
         )
 
-    count = evidence_rank_counts[
+    not_retrieved = evidence_rank_counts[
         "not_retrieved"
     ]
 
     print(
         f"Gold evidence NOT in Top-5: "
-        f"{count}/{total} "
-        f"({count / total:.2%})"
+        f"{not_retrieved}/{total} "
+        f"({not_retrieved / total:.2%})"
+    )
+
+    # ------------------------------------------------------
+    # Sanity Check
+    # ------------------------------------------------------
+
+    rank_total = (
+        sum(
+            evidence_rank_counts[rank]
+            for rank in range(1, 6)
+        )
+        + not_retrieved
+    )
+
+    print(
+        f"\nRank accounting check: "
+        f"{rank_total}/{total}"
     )
 
 
