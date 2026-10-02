@@ -147,7 +147,7 @@ def evaluate():
             evidence["page"]
             for evidence in item["gold_evidence"]
         }
-
+        print(f"Evaluating question : {question}")
         results = retriever.search(
             query=question,
             top_k=5,
