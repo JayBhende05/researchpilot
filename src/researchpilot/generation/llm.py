@@ -6,7 +6,7 @@ from researchpilot.config.settings import (
 )
 
 
-class GeminiLLM():
+class GeminiLLM:
 
     def __init__(self):
         self.client = genai.Client(
@@ -18,6 +18,9 @@ class GeminiLLM():
         response = self.client.models.generate_content(
             model=GEMINI_MODEL,
             contents=prompt,
+            config={
+                "response_mime_type": "application/json",
+            },
         )
 
         return response.text

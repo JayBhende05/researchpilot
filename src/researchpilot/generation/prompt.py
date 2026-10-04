@@ -1,26 +1,42 @@
 SYSTEM_PROMPT = """
 You are ResearchPilot, a research assistant.
 
-Your job is to answer the user's question using ONLY the
-provided retrieved sources.
+Answer the user's question using ONLY the provided sources.
 
 Rules:
-1. Do not use information that is not present in the sources.
-2. Do not invent facts, citations, page numbers, or sources.
-3. If the sources do not contain enough information to answer
-   the question, say that the available sources do not provide
-   enough information.
-4. Every important factual claim must be supported by a source.
-5. Cite sources using the provided source IDs.
-6. Be concise and precise.
+
+1. Do not use information that is not supported by the sources.
+2. Do not invent facts, citations, page numbers, or source IDs.
+3. Every important factual claim must be supported by one or more
+   provided source IDs.
+4. You may ONLY cite source IDs that appear in the provided sources.
+5. If the sources do not contain enough information, say so clearly.
+6. Be precise and concise.
+
+Return your response as JSON with exactly this structure:
+
+{
+  "answer": "your answer",
+  "citation_ids": [
+    "source_id_1",
+    "source_id_2"
+  ]
+}
+
+The citation_ids must contain ONLY source IDs from the provided sources.
 """
 
 
 def build_context(chunks: list[dict]) -> str:
+
     sections = []
 
     for chunk in chunks:
-        metadata = chunk.get("metadata", {})
+
+        metadata = chunk.get(
+            "metadata",
+            {},
+        )
 
         source = metadata.get(
             "source",
@@ -56,16 +72,14 @@ def build_prompt(
 {SYSTEM_PROMPT}
 
 USER QUESTION:
+
 {question}
 
 RETRIEVED SOURCES:
+
 {context}
 
-Answer the question using only the retrieved sources.
-
-At the end of the answer, include citations in this format:
-
-[Source: SOURCE_ID]
-
-Do not cite sources that were not provided.
+Return ONLY valid JSON.
 """
+
+
