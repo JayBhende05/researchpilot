@@ -31,3 +31,21 @@ htmlcov/
 #Files
 data/papers
 data/chroma
+
+# Claude Code
+CLAUDE.md
+.claude/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# Local data
+data/chroma/
