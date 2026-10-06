@@ -1,194 +1,153 @@
-# ResearchPilot v0.3 — Grounded Answer Generation
+# ResearchPilot v0.4 — API and Chat UI
 
-**v0.3** builds on the improved retrieval pipeline from **v0.2** by adding end-to-end answer generation with Gemini and citation validation.
+v0.4 wraps the grounded RAG pipeline from v0.3 in a FastAPI service and adds a Next.js chat interface on top of it.
 
-- **v0.2** focused on retrieving the right evidence.
-- **v0.3** connects that evidence to a complete generation pipeline.
+- v0.2 focused on retrieving the right evidence.
+- v0.3 connected that evidence to a complete generation pipeline.
+- v0.4 makes that pipeline usable as an application: an HTTP API and a chat UI with sources.
 
-```text
-Question
-   ↓
-Hybrid Retrieval + Reranking
-   ↓
-Top-5 Evidence Chunks
-   ↓
-Prompt Builder
-   ↓
-Gemini
-   ↓
-Structured Answer + Citation IDs
-   ↓
-Citation Validation
-   ↓
-RAGResponse
+## Demo
+
+![ResearchPilot chat UI answering a question with sources](docs/images/chat-ui.png)
+
 ```
-
----
+Next.js Chat UI
+      ↓
+FastAPI  (POST /api/v1/chat)
+      ↓
+RAGPipeline
+      ↓
+Hybrid Retrieval (Vector + BM25 + RRF) → Reranker (Top-5)
+      ↓
+Gemini (structured JSON)
+      ↓
+Answer + Validated Citations
+```
 
 ## What We Added
 
-### 1. Generation Layer
+### 1. FastAPI Service
 
-Added a dedicated `generation/` module responsible for:
+Added an `api/` module around `RAGPipeline`:
 
-- Gemini integration
-- Prompt construction
-- Structured response schemas
-- Converting retrieved evidence into generation context
-
-The generation layer receives the **Top-5 chunks** produced by the v0.2 retrieval pipeline and asks Gemini to answer using that evidence.
-
----
-
-### 2. End-to-End RAG Pipeline
-
-Added:
-
-```text
-pipeline/rag.py
+```
+src/researchpilot/api/
+├── main.py       app creation, startup, CORS
+├── deps.py       shared pipeline dependency
+├── schemas.py    request / response models
+└── routes/
+    ├── chat.py   POST /api/v1/chat
+    └── health.py GET /health
 ```
 
-This connects the complete pipeline:
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/v1/chat` | POST | Ask a question, get a grounded answer with citations |
+| `/health` | GET | Service health check |
 
-```text
-Question
-   ↓
-Retrieval
-   ↓
-Top-5 Evidence
-   ↓
-Prompt Builder
-   ↓
-Gemini
-   ↓
-Structured Response
-   ↓
-Citation Validation
-   ↓
-RAGResponse
+### 2. Pipeline Built Once at Startup
+
+The embedding model, the BGE reranker, the Chroma vector store and the BM25 index are loaded once when the server starts, not on every request.
+
+```
+Server start
+      ↓
+Load embedder + reranker + Chroma + BM25
+      ↓
+Build RAGPipeline (single shared instance)
+      ↓
+Requests reuse the same pipeline
 ```
 
-The goal is to make ResearchPilot a complete **retrieval-augmented generation (RAG) system** rather than a retrieval-only system.
+Loading these per request would add model-load time to every question. Building the pipeline once keeps request latency down to the actual retrieval and generation work.
 
----
+### 3. Chat Request and Response
 
-### 3. Structured Gemini Output
-
-Gemini is required to return a structured response containing both:
-
-- The generated answer
-- The IDs of the evidence chunks used to support it
-
-Example:
+Request:
 
 ```json
 {
-  "answer": "The model was trained using AdamW...",
-  "citation_ids": ["chunk_1", "chunk_3"]
+  "question": "what is attention"
 }
 ```
 
-This separates the generated answer from its supporting evidence and makes citations **machine-readable**.
+Response:
 
----
-
-### 4. Citation Validation
-
-Generated citation IDs are validated against the chunks that were actually retrieved.
-
-Conceptually:
-
-```text
-Retrieved Chunks
-      ↓
-{chunk_1, chunk_2, chunk_3, chunk_4, chunk_5}
-      ↓
-             Gemini
-               ↓
-citation_ids: ["chunk_1", "chunk_3"]
-               ↓
-       Citation Validation
-               ↓
-       Validated Citations
+```json
+{
+  "question": "what is attention",
+  "answer": "An attention function can be described as mapping a query and a set of key-value pairs to an output, where the query, keys, values, and output are all vectors, and the output is computed as a weighted sum.",
+  "citations": [
+    {
+      "chunk_id": "attentionisallyouneed.pdf_p3_c2",
+      "document_id": "attentionisallyouneed.pdf",
+      "text": "... 3.2 Attention\nAn attention function can be described as mapping a query and a set of key-value pairs to an output, ...",
+      "score": 0.9237903952598572,
+      "metadata": {
+        "page": 3,
+        "chunk": 2,
+        "source": "attentionisallyouneed.pdf"
+      }
+    }
+  ],
+  "latency_ms": {
+    "retrieval": 8554.5,
+    "generation": 1659.1,
+    "total": 10213.8
+  }
+}
 ```
 
-Gemini cannot introduce arbitrary citation IDs that were not present in the retrieved context.
+The same request in Postman:
 
-This provides an important grounding constraint:
+![POST /api/v1/chat response in Postman](docs/images/postman-chat-response.png)
 
-> **The model can only cite evidence that the retrieval pipeline actually supplied.**
+Each citation is a chunk that passed citation validation in the pipeline, returned with its text, score and metadata so a client can show the evidence behind the answer.
 
----
+### 4. Latency Reporting
 
-### 5. End-to-End Integration Test
+Every response includes `latency_ms`, broken down by stage:
 
-Added an integration test covering the complete RAG flow.
+| Field | Meaning |
+|---|---|
+| `retrieval` | Hybrid search, RRF fusion and reranking |
+| `generation` | Prompt building and the Gemini call |
+| `total` | Full pipeline time for the request |
 
-The test verifies that:
+This makes it visible where a request spends its time. In the example above, retrieval accounts for most of the total, which makes it the first place to look for speedups.
 
-1. A question enters the pipeline.
-2. Retrieval produces evidence chunks.
-3. The prompt builder constructs the generation context.
-4. Gemini produces the expected structured response.
-5. Citation IDs are validated against retrieved chunks.
-6. The final `RAGResponse` is returned successfully.
+### 5. Next.js Chat UI
 
-This tests the system as an **integrated pipeline** rather than testing retrieval and generation independently.
+Added a `frontend/` app built with Next.js and TypeScript:
 
----
+- Chat page for asking questions
+- Answer display
+- Sources panel showing the cited evidence chunks
+- Loading state while the pipeline runs
+- Error state when a request fails
 
-# Architecture
+CORS is configured on the API so the frontend can call it from a different origin during development.
 
-The v0.2 retrieval architecture remains unchanged, with the generation and citation-validation stages added downstream.
+### 6. API Tests
 
-```text
-User Question
-      │
-      ▼
-Vector Search ──────────────┐
-Top-20                      │
-                            ├──→ RRF Fusion
-BM25 Search ────────────────┘     (k = 60)
-Top-20
-                                  │
-                                  ▼
-                           Candidate Pool
-                                  │
-                                  ▼
-                         BGE Cross-Encoder
-                            Reranking
-                                  │
-                                  ▼
-                               Top-5
-                          Evidence Chunks
-                                  │
-                                  ▼
-                           Prompt Builder
-                                  │
-                                  ▼
-                              Gemini
-                                  │
-                                  ▼
-                    Structured Answer + IDs
-                                  │
-                                  ▼
-                       Citation Validation
-                                  │
-                                  ▼
-                             RAGResponse
+Added basic API tests covering the chat and health endpoints, alongside the existing ingestion, retrieval and pipeline tests.
+
+## Architecture
+
+The v0.3 pipeline is unchanged. v0.4 adds the two layers above it.
+
 ```
-
----
-
-# Pipeline Flow
-
-The complete ResearchPilot v0.3 pipeline is:
-
-```text
-                         User Question
+                        Next.js Chat UI
+              (question, answer, sources panel)
+                              │
+                              ▼
+                           FastAPI
+                  POST /api/v1/chat · GET /health
+                              │
+                              ▼
+                         RAGPipeline
                               │
                  ┌────────────┴────────────┐
-                 │                         │
                  ▼                         ▼
            Vector Search              BM25 Search
               Top-20                    Top-20
@@ -196,17 +155,14 @@ The complete ResearchPilot v0.3 pipeline is:
                  └────────────┬────────────┘
                               ▼
                          RRF Fusion
-                         (k = 60)
+                          (k = 60)
                               │
                               ▼
-                       Candidate Pool
+                     BGE Cross-Encoder
+                         Reranking
                               │
                               ▼
-                  BGE Cross-Encoder
-                     Reranking
-                              │
-                              ▼
-                           Top-5
+                    Top-5 Evidence Chunks
                               │
                               ▼
                        Prompt Builder
@@ -215,146 +171,140 @@ The complete ResearchPilot v0.3 pipeline is:
                            Gemini
                               │
                               ▼
-                 Structured Answer + IDs
+                  Structured Answer + IDs
                               │
                               ▼
-                    Citation Validation
+                     Citation Validation
                               │
                               ▼
-                         RAGResponse
+               Answer + Citations + latency_ms
 ```
 
----
+## Project Structure
 
-# Why This Change Matters
+```
+researchpilot/
+├── frontend/          Next.js + TypeScript chat UI
+├── src/researchpilot/
+│   ├── api/           main.py, deps.py, schemas.py, routes/ (chat, health)
+│   ├── ingestion/     loader.py, chunker.py, ingest.py
+│   ├── retrieval/     bm25.py, embedder.py, vector_store.py,
+│   │                  hybrid.py, reranker.py, reranked.py
+│   ├── generation/    llm.py, prompt.py, schemas.py
+│   ├── pipeline/      rag.py
+│   └── config/        settings.py
+├── tests/             ingestion/, retrieval/, query/, pipeline/test_rag.py
+├── experiments/       notebooks/, retrieval/, evaluation/
+└── data/              raw/, processed/, evaluation/
+```
 
-The v0.2 benchmark established that ResearchPilot could retrieve relevant evidence reliably:
+## Running Locally
 
-| Metric | v0.1 | v0.2 |
-|---|---:|---:|
-| Document Top-1 | 100% | 100% |
-| Evidence Top-1 | 55% | 62.5% |
-| Evidence Top-3 | 70% | 90% |
-| Evidence Top-5 | 80% | 92.5% |
+Backend:
 
-The next problem is no longer only retrieval.
+```bash
+uvicorn researchpilot.api.main:app --reload
+```
 
-Once useful evidence has been retrieved, the system needs to:
+Frontend:
 
-- Synthesize that evidence into an answer.
-- Preserve the connection between claims and retrieved evidence.
-- Produce citations in a structured format.
-- Prevent unsupported citation references.
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-**v0.3 addresses this first generation-stage problem.**
+Example request:
 
----
+```bash
+curl -X POST http://localhost:8000/api/v1/chat \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is the main finding of the Transformer paper?"}'
+```
 
-# v0.2 → v0.3
+## v0.3 → v0.4
 
-| Area | v0.2 | v0.3 |
+| Area | v0.3 | v0.4 |
 |---|---|---|
 | Retrieval | Hybrid Vector + BM25 | Unchanged |
-| Fusion | RRF (`k = 60`) | Unchanged |
+| Fusion | RRF (k = 60) | Unchanged |
 | Ranking | BGE Cross-Encoder | Unchanged |
-| Evidence | Top-5 chunks | Top-5 chunks |
-| Generation | — | Gemini |
-| Output | Retrieved chunks | Structured answer + citation IDs |
-| Citations | Retrieval evaluation | Citation validation |
-| Integration | Retrieval pipeline | End-to-end RAG pipeline |
-| Testing | Retrieval benchmark | End-to-end integration test |
+| Generation | Gemini, structured output | Unchanged |
+| Citations | Citation validation | Unchanged, now returned with text, score and metadata |
+| Interface | Python pipeline (`pipeline/rag.py`) | FastAPI service + Next.js chat UI |
+| Model loading | Per pipeline construction | Once at server startup |
+| Observability | — | `latency_ms` in every response |
+| Testing | End-to-end integration test | + basic API tests |
 
----
+## Why This Change Matters
 
-# Engineering Lesson
+Until v0.3, ResearchPilot could only be used by calling the pipeline from Python. The retrieval and generation work was there, but nobody could ask it a question without the codebase open.
 
-v0.2 showed that **retrieval quality and ranking quality are separate problems**.
+v0.4 puts an explicit interface in front of the pipeline:
 
-v0.3 extends that principle to generation:
+- The API gives the pipeline a stable contract: one request shape, one response shape.
+- The UI shows the answer and the evidence side by side, which is the point of a grounded system.
+- `latency_ms` makes the cost of each request visible instead of assumed.
 
-> **A good RAG system needs both strong retrieval and controlled generation.**
+## Engineering Lesson
 
-Retrieving the correct evidence is not enough.
+v0.2 showed that retrieval quality and ranking quality are separate problems. v0.3 extended that to generation. v0.4 applies the same idea to serving:
 
-The generation layer must use that evidence in a way that remains:
+> The pipeline and the way it is served are separate concerns.
 
-- **Traceable**
-- **Verifiable**
-- **Grounded**
+`RAGPipeline` knows nothing about HTTP. The API layer knows nothing about retrieval or prompts. It builds the pipeline once, passes questions in and returns the result. That boundary is what allowed the frontend and the API to be added without touching retrieval, generation or citation validation.
 
-The current architecture therefore treats:
+## Current Limitations
 
-```text
-Retrieval
-    ↓
-Generation
-    ↓
-Citation Validation
+This release is a single-user, local application. It does not yet include:
+
+- Authentication
+- Multi-tenancy or tenant context
+- Rate limiting
+- Streaming responses
+- Redis or background queues
+- User feedback on answers
+
+Answer quality is also still unevaluated. The open items from v0.3 remain:
+
+- Evaluating answer correctness against `expected_answer`
+- Measuring citation correctness and completeness
+- Detecting unsupported claims in generated answers
+- Expanding the benchmark beyond 40 questions and 4 papers
+- Moving from page-level to chunk-level evidence evaluation
+
+## Next Target
+
+```
+Next.js Chat UI (streaming, sources, feedback)
+        ↓
+FastAPI (auth, tenant context, rate limits)
+        ↓
+RAGPipeline
+        ↓
+Hybrid Retrieval (vector + BM25 + RRF) → Reranker (top-5)
+        ↓
+Gemini (structured JSON)
+        ↓
+Answer + Validated Citations
 ```
 
-as separate stages with explicit interfaces between them.
-
----
-
-# Current Limitations
-
-The generation layer is now integrated, but answer-generation quality still needs its own evaluation.
-
-Future work includes:
-
-- Evaluating answer correctness against `expected_answer`.
-- Measuring citation correctness and citation completeness.
-- Detecting unsupported claims in generated answers.
-- Evaluating whether citations actually support the claims they are attached to.
-- Expanding the benchmark beyond 40 questions and 4 papers.
-- Moving from page-level evidence labels toward chunk-level evidence evaluation.
-
----
-
-# Next Evaluation Target
-
-The next evaluation target is therefore not simply:
-
-> **Did we retrieve the right evidence?**
-
-but:
-
-> **Did we generate the right answer, and can every important claim be traced back to retrieved evidence?**
-
-This marks the transition from evaluating ResearchPilot as a **retrieval system** to evaluating it as a **grounded, end-to-end RAG system**.
-
----
+The next step is moving from a working application to a production-shaped one: streaming answers to the UI, collecting feedback, and adding auth, tenant context and rate limits at the API layer.
 
 ## ResearchPilot Progression
 
-```text
+```
 v0.1 — Basic / Naive RAG
-        │
-        ▼
-   Vector Retrieval
-        │
-        ▼
-     LLM Answer
-        │
-        │
+        │   Vector Retrieval → LLM Answer
         ▼
 v0.2 — Better Retrieval
-        │
-        ├── Vector Search
-        ├── BM25
-        ├── RRF Fusion
-        ├── BGE Reranking
-        └── Top-5 Evidence
-        │
+        │   Vector + BM25 → RRF Fusion → BGE Reranking → Top-5
         ▼
 v0.3 — Grounded Answer Generation
-        │
-        ├── Retrieval
-        ├── Prompt Builder
-        ├── Gemini
-        ├── Structured Output
-        └── Citation Validation
-        │
+        │   Prompt Builder → Gemini → Structured Output → Citation Validation
         ▼
-   Grounded RAG Response
+v0.4 — API and Chat UI
+        │   FastAPI service → Next.js chat with sources
+        ▼
+   Usable RAG Application
 ```
